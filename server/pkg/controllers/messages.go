@@ -54,6 +54,7 @@ func WebSocketMessages(c *gin.Context) {
 		log.Println("Error: ", err)
 		return
 	}
+
 	defer ws.Close()
 
 	userID := websockets.GetUserIDFromContext(c)
@@ -68,5 +69,5 @@ func WebSocketMessages(c *gin.Context) {
 	go websockets.StartInactivityTimerMessages(ws, userID)
 
 	// Iniciar o manuseio de mensagens
-	websockets.HandleChatMessages(ws, userID)
+	websockets.HandleMessages(ws, userID)
 }
