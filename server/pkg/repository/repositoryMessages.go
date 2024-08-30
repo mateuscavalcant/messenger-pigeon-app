@@ -5,8 +5,8 @@ import (
 	"errors"
 	"fmt"
 	"log"
-	"messenger-pigeon-app/pkg/database"
-	"messenger-pigeon-app/pkg/model"
+	"messenger-pigeon-app/config/database"
+	"messenger-pigeon-app/internal/model"
 )
 
 func MessageGetUserIDByUsername(username string) (int, error) {
@@ -15,9 +15,9 @@ func MessageGetUserIDByUsername(username string) (int, error) {
 	err := db.QueryRow("SELECT id FROM user WHERE username = ?", username).Scan(&id)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return 0, errors.New("usuário não encontrado")
+			return 0, errors.New("User not found")
 		}
-		log.Println("Erro ao consultar ID do usuário:", err)
+		log.Println("Error querying user ID:", err)
 		return 0, err
 	}
 	return id, nil
@@ -57,31 +57,13 @@ func GetUserMessages(user1ID, user2ID int) ([]model.UserMessage, error) {
 	return messages, nil
 }
 
-// Obter informações de usuário por ID
-func GetUserInfo(userID int) (string, []byte, error) {
+func GetUsernameByID(userID int) (string, error) {
 	db := database.GetDB()
-	var name string
-	var icon []byte
-	err := db.QueryRow("SELECT name, icon FROM user WHERE id = ?", userID).Scan(&name, &icon)
+	var username string
+	err := db.QueryRow("SELECT username FROM user WHERE id = ?", userID).Scan(&username)
 	if err != nil {
-		return "", nil, fmt.Errorf("failed to query user info: %w", err)
+		log.Println("Erro ao consultar username:", err)
+		return "", err
 	}
-	return name, icon, nil
-}
-
-// Salvar nova mensagem
-func SaveMessage(message model.UserMessage) (int64, error) {
-	db := database.GetDB()
-	stmt, err := db.Prepare("INSERT INTO user_message(content, messageBy, messageTo, created_at) VALUES (?, ?, ?, NOW())")
-	if err != nil {
-		return 0, fmt.Errorf("failed to prepare statement: %w", err)
-	}
-	defer stmt.Close()
-
-	result, err := stmt.Exec(message.Content, message.MessageBy, message.MessageTo)
-	if err != nil {
-		return 0, fmt.Errorf("failed to execute statement: %w", err)
-	}
-
-	return result.LastInsertId()
+	return username, nil
 }

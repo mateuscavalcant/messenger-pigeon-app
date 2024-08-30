@@ -2,9 +2,9 @@ package services
 
 import (
 	"fmt"
-	"messenger-pigeon-app/pkg/database"
-	"messenger-pigeon-app/pkg/model"
-	"messenger-pigeon-app/repository"
+	"messenger-pigeon-app/config/database"
+	"messenger-pigeon-app/internal/model"
+	"messenger-pigeon-app/pkg/repository"
 )
 
 func GetUserChats(userID int64) ([]model.UserMessage, error) {

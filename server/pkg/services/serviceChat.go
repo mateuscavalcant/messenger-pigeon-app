@@ -4,8 +4,8 @@ import (
 	"encoding/base64"
 	"fmt"
 	"log"
-	"messenger-pigeon-app/pkg/model"
-	"messenger-pigeon-app/repository"
+	"messenger-pigeon-app/internal/model"
+	"messenger-pigeon-app/pkg/repository"
 	"time"
 )
 
@@ -39,14 +39,14 @@ func SendMessage(message model.UserMessage) (int64, error) {
 }
 
 // Obter informações de parceiro de chat
-func GetChatPartnerInfo(userID int) (string, string, error) {
-	name, icon, err := repository.GetUserInfo(userID)
+func GetChatInfos(userID int) (string, string, string, error) {
+	name, username, icon, err := repository.GetUserInfo(userID)
 	if err != nil {
-		return "", "", fmt.Errorf("error retrieving chat partner info: %w", err)
+		return "", "", "", fmt.Errorf("error retrieving chat partner info: %w", err)
 	}
 	iconBase64 := ""
 	if icon != nil {
 		iconBase64 = base64.StdEncoding.EncodeToString(icon)
 	}
-	return name, iconBase64, nil
+	return name, username, iconBase64, nil
 }
