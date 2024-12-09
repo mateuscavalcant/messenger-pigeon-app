@@ -12,7 +12,7 @@ import (
 var workerPool = NewWorkerPool(10)
 
 // Lida com mensagens WebSocket em lotes para otimização
-func handleWebSocketMessages() {
+func HandleWebSocketMessages() {
 	batch := make([]model.UserMessage, 0, 10) // Lote de até 10 mensagens
 	ticker := time.NewTicker(50 * time.Millisecond)
 	defer ticker.Stop()
