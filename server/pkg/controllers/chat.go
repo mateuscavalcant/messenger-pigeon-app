@@ -62,6 +62,7 @@ func Chat(c *gin.Context) {
 
 // WebSocketChat é um manipulador HTTP para a rota websockets.
 func WebSocketChat(c *gin.Context) {
+	var conn websockets.ConnectionManager
 	ws, err := websocket.Upgrade(c.Writer, c.Request, nil, 1024, 1024)
 	if err != nil {
 		log.Println("Error:", err)
@@ -69,16 +70,13 @@ func WebSocketChat(c *gin.Context) {
 	}
 	defer ws.Close()
 
-	userID := websockets.GetUserIDFromContext(c)
+	userID := GetUserIDFromContext(c)
 	if userID == 0 {
 		return
 	}
 
 	// Registrar a conexão
-	websockets.UserConnections[int64(userID)] = ws
-
-	// Iniciar o controle de inatividade
-	go websockets.StartInactivityTimer(ws, userID)
+	conn.AddConnection(int64(userID), ws)
 
 	// Iniciar o manuseio de mensagens
 	websockets.HandleChatMessages(ws, userID)
@@ -132,4 +130,25 @@ func CreateNewMessage(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, resp)
+}
+
+// Helper para extrair o ID do usuário do contexto
+func GetUserIDFromContext(c *gin.Context) int {
+	userId, exists := c.Get("id")
+	if !exists {
+		log.Println("User ID not found in session")
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "User ID not found in session"})
+		return 0
+	}
+
+	var id int
+	idFloat, ok := userId.(float64)
+	if !ok {
+		id = int(idFloat)
+
+	} else {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid user ID"})
+	}
+
+	return id
 }

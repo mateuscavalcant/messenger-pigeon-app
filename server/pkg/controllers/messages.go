@@ -57,7 +57,7 @@ func WebSocketMessages(c *gin.Context) {
 
 	defer ws.Close()
 
-	userID := websockets.GetUserIDFromContext(c)
+	userID := GetUserIDFromContext(c)
 	if userID == 0 {
 		return
 	}
