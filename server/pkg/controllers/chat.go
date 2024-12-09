@@ -6,7 +6,7 @@ import (
 	"messenger-pigeon-app/internal/err"
 	"messenger-pigeon-app/pkg/repository"
 	"messenger-pigeon-app/pkg/services"
-	"messenger-pigeon-app/pkg/websockets"
+	"messenger-pigeon-app/pkg/websockets/chat"
 	"net/http"
 	"strconv"
 	"strings"
@@ -62,7 +62,7 @@ func Chat(c *gin.Context) {
 
 // WebSocketChat é um manipulador HTTP para a rota websockets.
 func WebSocketChat(c *gin.Context) {
-	var conn websockets.ConnectionManager
+	var conn chat.ConnectionManager
 	ws, err := websocket.Upgrade(c.Writer, c.Request, nil, 1024, 1024)
 	if err != nil {
 		log.Println("Error:", err)
@@ -79,7 +79,7 @@ func WebSocketChat(c *gin.Context) {
 	conn.AddConnection(int64(userID), ws)
 
 	// Iniciar o manuseio de mensagens
-	websockets.HandleChatMessages(ws, userID)
+	chat.HandleChatMessages(ws, userID)
 }
 
 func CreateNewMessage(c *gin.Context) {
@@ -117,7 +117,7 @@ func CreateNewMessage(c *gin.Context) {
 	}
 
 	// Chama o service para enviar a mensagem
-	messageID, err := websockets.SendChatMessage(id, username, content)
+	messageID, err := chat.SendChatMessage(id, username, content)
 	if err != nil {
 		log.Println("Error sending message:", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to send message"})

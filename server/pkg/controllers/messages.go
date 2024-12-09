@@ -5,7 +5,7 @@ import (
 	"log"
 	"messenger-pigeon-app/pkg/repository"
 	"messenger-pigeon-app/pkg/services"
-	"messenger-pigeon-app/pkg/websockets"
+	"messenger-pigeon-app/pkg/websockets/messages"
 	"net/http"
 	"strconv"
 
@@ -49,6 +49,7 @@ func Messages(c *gin.Context) {
 }
 
 func WebSocketMessages(c *gin.Context) {
+	var conn messages.ConnectionManager
 	ws, err := websocket.Upgrade(c.Writer, c.Request, nil, 1024, 1024)
 	if err != nil {
 		log.Println("Error: ", err)
@@ -63,11 +64,8 @@ func WebSocketMessages(c *gin.Context) {
 	}
 
 	// Registrar a conexão
-	websockets.UserConnectionsMessages[int64(userID)] = ws
-
-	// Iniciar o controle de inatividade
-	go websockets.StartInactivityTimerMessages(ws, userID)
+	conn.AddConnection(int64(userID), ws)
 
 	// Iniciar o manuseio de mensagens
-	websockets.HandleMessages(ws, userID)
+	messages.HandleMessages(ws, userID)
 }
