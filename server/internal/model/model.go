@@ -25,3 +25,9 @@ type UserMessage struct {
 	MessageTo      int    `json:"message-to"`
 	CreatedAt      string `json:"hourminute"`
 }
+
+type Pagination struct {
+	LastMessageID int `json:"LastMessageID"`
+	NewLimit      int `json:"newLimit"`
+	Limit         int `json:"limit"`
+}

@@ -10,8 +10,8 @@ import (
 )
 
 // Obter mensagens entre usuários e processá-las
-func GetChatMessages(user1ID, user2ID int) ([]model.UserMessage, error) {
-	messages, err := repository.GetUserMessages(user1ID, user2ID)
+func GetChatMessages(user1ID, user2ID int, lastMessageID int, limit int) ([]model.UserMessage, error) {
+	messages, err := repository.GetUserMessages(user1ID, user2ID, lastMessageID, limit)
 	if err != nil {
 		return nil, fmt.Errorf("error retrieving messages: %w", err)
 	}

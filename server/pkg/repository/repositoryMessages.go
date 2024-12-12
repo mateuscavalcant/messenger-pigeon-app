@@ -23,24 +23,23 @@ func MessageGetUserIDByUsername(username string) (int, error) {
 	return id, nil
 }
 
-// Obter mensagens entre usuários
-func GetUserMessages(user1ID, user2ID int) ([]model.UserMessage, error) {
+// Obter mensagens entre usuários com paginação
+func GetUserMessages(user1ID, user2ID int, lastMessageID int, limit int) ([]model.UserMessage, error) {
 	db := database.GetDB()
-	stmt, err := db.Prepare(`
-		SELECT user_message.message_id, user_message.messageBy, user_message.content,
-		       user.id, user.username, user.name, user.icon, user_message.created_at
-		FROM user_message
-		JOIN user ON user.id = user_message.messageBy
-		WHERE (user_message.messageBy = ? AND user_message.messageTo = ?) OR 
-		      (user_message.messageBy = ? AND user_message.messageTo = ?)
-		ORDER BY user_message.created_at ASC
-	`)
-	if err != nil {
-		return nil, fmt.Errorf("failed to prepare statement: %w", err)
-	}
-	defer stmt.Close()
 
-	rows, err := stmt.Query(user1ID, user2ID, user2ID, user1ID)
+	query := `
+	SELECT user_message.message_id, user_message.messageBy, user_message.content,
+	       user.id, user.username, user.name, user.icon, user_message.created_at
+	FROM user_message
+	JOIN user ON user.id = user_message.messageBy
+	WHERE 
+	    ((user_message.messageBy = ? AND user_message.messageTo = ?) OR 
+	     (user_message.messageBy = ? AND user_message.messageTo = ?))
+	    AND (user_message.message_id < ? OR ? = 0) -- Filtro para mensagens mais antigas
+	ORDER BY user_message.message_id DESC
+	LIMIT ?`
+
+	rows, err := db.Query(query, user1ID, user2ID, user2ID, user1ID, lastMessageID, lastMessageID, limit)
 	if err != nil {
 		return nil, fmt.Errorf("failed to execute query: %w", err)
 	}
@@ -54,6 +53,12 @@ func GetUserMessages(user1ID, user2ID int) ([]model.UserMessage, error) {
 		}
 		messages = append(messages, message)
 	}
+
+	// Reverter a ordem para cronológica (opcional)
+	for i, j := 0, len(messages)-1; i < j; i, j = i+1, j-1 {
+		messages[i], messages[j] = messages[j], messages[i]
+	}
+
 	return messages, nil
 }
 

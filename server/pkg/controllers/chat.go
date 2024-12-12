@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"messenger-pigeon-app/internal/err"
+	"messenger-pigeon-app/internal/model"
 	"messenger-pigeon-app/pkg/repository"
 	"messenger-pigeon-app/pkg/services"
 	"messenger-pigeon-app/pkg/websockets/chat"
@@ -36,15 +37,36 @@ func Chat(c *gin.Context) {
 		return
 	}
 
-	messages, err := services.GetChatMessages(id, partnerID)
+	var req model.Pagination
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		req.LastMessageID = 0
+		req.Limit = 20 // Define limite padrão inicial
+	}
+
+	log.Println("new limit: ", req.NewLimit)
+
+	// Limita o tamanho máximo e mínimo do limit
+	if req.NewLimit > 0 {
+		req.Limit = req.NewLimit
+	}
+	if req.Limit < 10 {
+		req.Limit = 10
+	}
+	if req.Limit > 100 {
+		req.Limit = 100
+	}
+
+	log.Println("limit: ", req.Limit)
+
+	messages, err := services.GetChatMessages(id, partnerID, req.LastMessageID, req.Limit)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve messages"})
 		return
 	}
-	currentUsername, err := repository.GetUsernameByID(id)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get user Username"})
-		return
+
+	if len(messages) < req.Limit {
+		req.Limit = len(messages) // Redimensiona limite se menos mensagens foram encontradas
 	}
 
 	userInfosName, userInfosUsername, userInfosIcon, err := services.GetChatInfos(partnerID)
@@ -54,9 +76,9 @@ func Chat(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"currentUsername": gin.H{"username": currentUsername},
-		"messages":        messages,
-		"userInfos":       gin.H{"name": userInfosName, "username": userInfosUsername, "iconBase64": userInfosIcon},
+		"messages":      messages,
+		"limitMessages": gin.H{"limit": req.Limit},
+		"userInfos":     gin.H{"name": userInfosName, "username": userInfosUsername, "iconBase64": userInfosIcon},
 	})
 }
 
