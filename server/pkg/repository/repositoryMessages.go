@@ -54,7 +54,7 @@ func GetUserMessages(user1ID, user2ID int, lastMessageID int, limit int) ([]mode
 		messages = append(messages, message)
 	}
 
-	// Reverter a ordem para cronológica (opcional)
+	// Reverter a ordem para cronológica
 	for i, j := 0, len(messages)-1; i < j; i, j = i+1, j-1 {
 		messages[i], messages[j] = messages[j], messages[i]
 	}
