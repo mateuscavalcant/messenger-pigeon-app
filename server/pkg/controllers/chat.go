@@ -41,20 +41,14 @@ func Chat(c *gin.Context) {
 
 	if err := c.ShouldBindJSON(&req); err != nil {
 		req.LastMessageID = 0
-		req.Limit = 20 // Define limite padrão inicial
 	}
 
 	log.Println("new limit: ", req.NewLimit)
 
-	// Limita o tamanho máximo e mínimo do limit
-	if req.NewLimit > 0 {
+	req.Limit = 20
+
+	if req.NewLimit > 20 {
 		req.Limit = req.NewLimit
-	}
-	if req.Limit < 10 {
-		req.Limit = 10
-	}
-	if req.Limit > 100 {
-		req.Limit = 100
 	}
 
 	log.Println("limit: ", req.Limit)
@@ -63,10 +57,6 @@ func Chat(c *gin.Context) {
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve messages"})
 		return
-	}
-
-	if len(messages) < req.Limit {
-		req.Limit = len(messages) // Redimensiona limite se menos mensagens foram encontradas
 	}
 
 	userInfosName, userInfosUsername, userInfosIcon, err := services.GetChatInfos(partnerID)
